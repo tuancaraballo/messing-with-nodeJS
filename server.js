@@ -10,7 +10,11 @@ var PORT = process.env.PORT || 3000;
 
 // --> The class had the index.html inside a public directory 
 //     so you might do  __dirname +'/public'
-app.use(express.static(__dirname));
+//.use(express.static(__dirname));
+
+app.get('/', function (request, response) {
+	response.send('Hello world');
+});
 // console.log(__dirname);
 
 
