@@ -136,10 +136,26 @@ app.post('/todos', function (request, response) {
 
 	body.id = todoNextId;
 
-
 	todos.push(body);
 	todoNextId++;
 	response.json(body);
+});
+
+
+// DELETE from Array
+app.delete('/todos/:id', function (request, response) {
+
+	var todoId = parseInt(request.params.id,10);
+	console.log('ID: ' + todoId);
+	var myTask = _.findWhere(todos, {id: todoId});
+
+	if(!myTask){
+		response.status(404).json({"error": "no todo found with that id"});
+	}else{
+   		todos = _.without(todos, myTask);
+		response.json(todos);
+	}
+
 });
 
 
