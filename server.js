@@ -1,6 +1,21 @@
 var express = require('express');
 var bodyParser = require('body-parser');
 
+/*
+	LESSON TIME: underscore
+
+		-> this is a library that has many functions that you don't have to build yourself.
+			example of these functions include: where, that allows you to find items into a list
+
+			where : returns everything that matches
+			findWhere: returns just the first match
+
+			visit underscorejs.org
+
+*/
+
+var _ = require('underscore');
+
 var app = express();
 var PORT = process.env.PORT || 3000;
 
@@ -64,8 +79,9 @@ function getTask(id){
  **/
 
 app.get('/todos/:id', function (request, response){
-	var id = parseInt(request.params.id,10);
-	var myTask = getTask(id);
+	var todoId = parseInt(request.params.id,10);
+	var myTask = _.findWhere(todos, {id: todoId});
+	//var myTask = getTask(id);  --> no longer needed.
 	if(myTask){
 		response.status(202).json(myTask);
 	}else{
@@ -98,8 +114,29 @@ app.get('/todos/:id', function (request, response){
         JSON(application/json). Notice how Headers(1) shows 1 now
 **/
 app.post('/todos', function (request, response) {
-	var body = request.body;
+	//var body = request.body;
+
+   var body =  _.pick(request.body, 'description', 'completed');
+	
+	console.log(body);
+
+	// --> if the task completed is a boolean, it doesn't check for true or false though, and a description was added
+	// --> you also want to check for the length in case somebody entered just a bunch of white spaces
+
+    if(!_.isBoolean(body.completed) || !_.isString(body.description) || body.description.trim().length === 0){
+    	console.log('Did not work!');
+    	return response.status(400).send();
+    }
+    
+    body.description = body.description.trim();
+
+    console.log(body);
+
+
+
 	body.id = todoNextId;
+
+
 	todos.push(body);
 	todoNextId++;
 	response.json(body);
