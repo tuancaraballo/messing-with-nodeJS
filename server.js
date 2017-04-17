@@ -32,14 +32,19 @@ app.use(bodyParser.json()); //--> it allows to parse JSON objects sent on the
 							// and access it via request.body;
 
 
+app.get('/', function (request, response) {
+	response.send('Root API');
+});
+
 app.get('/todos', function (request, response) {
-	response.sendfile('views/test.html', {root: __dirname })
 	response.json(todos);
 });
 
+
+
 // --> The class had the index.html inside a public directory 
 //     so you might do  __dirname +'/public'
-app.use(express.static(__dirname));
+//app.use(express.static(__dirname));
 
 
 /**	LESSON TIME:  == vs === and converting a request.param into the 
@@ -116,6 +121,8 @@ app.get('/todos/:id', function (request, response){
 app.post('/todos', function (request, response) {
 	//var body = request.body;
 
+   // --> this method from underscore, allows to filted the information
+   //    that we need from the request. 
    var body =  _.pick(request.body, 'description', 'completed');
 	
 	console.log(body);
@@ -157,6 +164,46 @@ app.delete('/todos/:id', function (request, response) {
 	}
 
 });
+
+
+// PUT to update the array
+
+app.put('/todos/:id', function (request, response) {
+	// -> filter the request to give you only these two fields
+	var body = _.pick(request.body, 'description', 'completed');
+	// -> get the id from the url 
+	var todoId = parseInt(request.params.id,10);
+	// -> find this task object based on this id:
+	var myTask = _.findWhere(todos, {id: todoId});
+
+	if(!myTask){
+		return response.status(404).send("Task not found");
+	}
+
+	var validAttribrutes = {};
+
+	if(body.hasOwnProperty('completed') && _.isBoolean(body.completed)){
+		validAttribrutes.completed = body.completed;
+	}else if (body.hasOwnProperty('completed')){ // --> property is not a boolean
+		return response.status(400).send();
+	}
+
+	
+	
+	if(body.hasOwnProperty('description') && _.isString(body.description)
+	 	&& body.description.trim().length > 0){
+		validAttribrutes.description = body.description
+	}else if (body.hasOwnProperty('description')){ //-> has the property, but wrong type
+		return response.status(400).send();
+	}
+
+	// --> update the task now using the extend property
+	_.extend(myTask, validAttribrutes);
+
+	response.json(myTask);
+
+});
+
 
 
 
