@@ -37,7 +37,17 @@ app.get('/', function (request, response) {
 });
 
 app.get('/todos', function (request, response) {
-	response.json(todos);
+	var queryParams = request.query;
+	var filtedTodos = todos;
+
+  // LESSON TIME: notice how the query parameter here instead of a boolean
+  //              it's a string
+	if (queryParams.hasOwnProperty('completed') && queryParams['completed'] === 'true'){
+		filtedTodos = _.where(filtedTodos, {completed: true});
+	}else if (queryParams.hasOwnProperty('completed') && queryParams['completed'] === 'false'){
+		filtedTodos = _.where(filtedTodos, {completed: false});	
+	}
+	response.json(filtedTodos);
 });
 
 
