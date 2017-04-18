@@ -27,26 +27,39 @@ var todoNextId = 1;
 
 
 app.use(bodyParser.json()); //--> it allows to parse JSON objects sent on the
-							// on the request body.
-							// Every time a JSON comes in, express will parse it
-							// and access it via request.body;
+// on the request body.
+// Every time a JSON comes in, express will parse it
+// and access it via request.body;
 
 
-app.get('/', function (request, response) {
+app.get('/', function(request, response) {
 	response.send('Root API');
 });
 
-app.get('/todos', function (request, response) {
+app.get('/todos', function(request, response) {
 	var queryParams = request.query;
 	var filtedTodos = todos;
 
-  // LESSON TIME: notice how the query parameter here instead of a boolean
-  //              it's a string
-	if (queryParams.hasOwnProperty('completed') && queryParams['completed'] === 'true'){
-		filtedTodos = _.where(filtedTodos, {completed: true});
-	}else if (queryParams.hasOwnProperty('completed') && queryParams['completed'] === 'false'){
-		filtedTodos = _.where(filtedTodos, {completed: false});	
+	// LESSON TIME: notice how the query parameter here instead of a boolean
+	//              it's a string
+	if (queryParams.hasOwnProperty('completed') && queryParams['completed'] === 'true') {
+		filtedTodos = _.where(filtedTodos, {
+			completed: true
+		});
+	} else if (queryParams.hasOwnProperty('completed') && queryParams['completed'] === 'false') {
+		filtedTodos = _.where(filtedTodos, {
+			completed: false
+		});
 	}
+
+	// LESSON TIME: Check if the queue property exists in the queryParam
+
+	if (queryParams.hasOwnProperty('q') && queryParams.q.length > 0) {
+		filtedTodos = _.filter(filtedTodos, function(todo) {
+			return todo.description.toLowerCase().indexOf(queryParams.q.toLowerCase()) > -1;
+		});
+	}
+
 	response.json(filtedTodos);
 });
 
@@ -72,12 +85,12 @@ app.get('/todos', function (request, response) {
 
 
 **/
-function getTask(id){
-    var len = todos.length
-	for(var i = 0; i < len;  i++){
-		if (todos[i].id === id){
+function getTask(id) {
+	var len = todos.length
+	for (var i = 0; i < len; i++) {
+		if (todos[i].id === id) {
 			console.log("Found the task: " + todos[i].description);
-			return todos[i];			
+			return todos[i];
 		}
 	}
 	console.log('Did\'t find the task');
@@ -93,13 +106,15 @@ function getTask(id){
 		response.status(404).send('Not found');
  **/
 
-app.get('/todos/:id', function (request, response){
-	var todoId = parseInt(request.params.id,10);
-	var myTask = _.findWhere(todos, {id: todoId});
+app.get('/todos/:id', function(request, response) {
+	var todoId = parseInt(request.params.id, 10);
+	var myTask = _.findWhere(todos, {
+		id: todoId
+	});
 	//var myTask = getTask(id);  --> no longer needed.
-	if(myTask){
+	if (myTask) {
 		response.status(202).json(myTask);
-	}else{
+	} else {
 		console.log('It did not find the task');
 		response.status(404).send();
 	}
@@ -128,26 +143,26 @@ app.get('/todos/:id', function (request, response){
         menu right next to binary, which might show 'text' by default, pick 
         JSON(application/json). Notice how Headers(1) shows 1 now
 **/
-app.post('/todos', function (request, response) {
+app.post('/todos', function(request, response) {
 	//var body = request.body;
 
-   // --> this method from underscore, allows to filted the information
-   //    that we need from the request. 
-   var body =  _.pick(request.body, 'description', 'completed');
-	
+	// --> this method from underscore, allows to filted the information
+	//    that we need from the request. 
+	var body = _.pick(request.body, 'description', 'completed');
+
 	console.log(body);
 
 	// --> if the task completed is a boolean, it doesn't check for true or false though, and a description was added
 	// --> you also want to check for the length in case somebody entered just a bunch of white spaces
 
-    if(!_.isBoolean(body.completed) || !_.isString(body.description) || body.description.trim().length === 0){
-    	console.log('Did not work!');
-    	return response.status(400).send();
-    }
-    
-    body.description = body.description.trim();
+	if (!_.isBoolean(body.completed) || !_.isString(body.description) || body.description.trim().length === 0) {
+		console.log('Did not work!');
+		return response.status(400).send();
+	}
 
-    console.log(body);
+	body.description = body.description.trim();
+
+	console.log(body);
 
 
 
@@ -160,16 +175,20 @@ app.post('/todos', function (request, response) {
 
 
 // DELETE from Array
-app.delete('/todos/:id', function (request, response) {
+app.delete('/todos/:id', function(request, response) {
 
-	var todoId = parseInt(request.params.id,10);
+	var todoId = parseInt(request.params.id, 10);
 	console.log('ID: ' + todoId);
-	var myTask = _.findWhere(todos, {id: todoId});
+	var myTask = _.findWhere(todos, {
+		id: todoId
+	});
 
-	if(!myTask){
-		response.status(404).json({"error": "no todo found with that id"});
-	}else{
-   		todos = _.without(todos, myTask);
+	if (!myTask) {
+		response.status(404).json({
+			"error": "no todo found with that id"
+		});
+	} else {
+		todos = _.without(todos, myTask);
 		response.json(todos);
 	}
 
@@ -178,32 +197,33 @@ app.delete('/todos/:id', function (request, response) {
 
 // PUT to update the array
 
-app.put('/todos/:id', function (request, response) {
+app.put('/todos/:id', function(request, response) {
 	// -> filter the request to give you only these two fields
 	var body = _.pick(request.body, 'description', 'completed');
 	// -> get the id from the url 
-	var todoId = parseInt(request.params.id,10);
+	var todoId = parseInt(request.params.id, 10);
 	// -> find this task object based on this id:
-	var myTask = _.findWhere(todos, {id: todoId});
+	var myTask = _.findWhere(todos, {
+		id: todoId
+	});
 
-	if(!myTask){
+	if (!myTask) {
 		return response.status(404).send("Task not found");
 	}
 
 	var validAttribrutes = {};
 
-	if(body.hasOwnProperty('completed') && _.isBoolean(body.completed)){
+	if (body.hasOwnProperty('completed') && _.isBoolean(body.completed)) {
 		validAttribrutes.completed = body.completed;
-	}else if (body.hasOwnProperty('completed')){ // --> property is not a boolean
+	} else if (body.hasOwnProperty('completed')) { // --> property is not a boolean
 		return response.status(400).send();
 	}
 
-	
-	
-	if(body.hasOwnProperty('description') && _.isString(body.description)
-	 	&& body.description.trim().length > 0){
+
+
+	if (body.hasOwnProperty('description') && _.isString(body.description) && body.description.trim().length > 0) {
 		validAttribrutes.description = body.description
-	}else if (body.hasOwnProperty('description')){ //-> has the property, but wrong type
+	} else if (body.hasOwnProperty('description')) { //-> has the property, but wrong type
 		return response.status(400).send();
 	}
 
@@ -218,6 +238,6 @@ app.put('/todos/:id', function (request, response) {
 
 
 // At the end, you tell it to listen to specific port. 
-app.listen(PORT, function () {
+app.listen(PORT, function() {
 	console.log('Server listering on port ' + PORT + ' ...');
 });
