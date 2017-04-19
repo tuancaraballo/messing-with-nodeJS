@@ -15,6 +15,7 @@ var bodyParser = require('body-parser');
 */
 
 var _ = require('underscore');
+var db = require('./db.js'); //-> importing the database
 
 var app = express();
 var PORT = process.env.PORT || 3000;
@@ -162,15 +163,19 @@ app.post('/todos', function(request, response) {
 
 	body.description = body.description.trim();
 
-	console.log(body);
-
-
-
 	body.id = todoNextId;
 
-	todos.push(body);
+
+	db.todo.create(body).then( function (todo) {
+		return response.status(200).json(todo.toJSON());
+	}).catch(function (error){
+		return response.status(400).json(error);
+	});
+
+
+	// todos.push(body);
 	todoNextId++;
-	response.json(body);
+	// response.json(body);
 });
 
 
@@ -233,11 +238,10 @@ app.put('/todos/:id', function(request, response) {
 	response.json(myTask);
 
 });
-
-
-
-
-// At the end, you tell it to listen to specific port. 
-app.listen(PORT, function() {
-	console.log('Server listering on port ' + PORT + ' ...');
+//-> sync the database first, and then start the server. 
+db.sequelize.sync({force: true}).then(function() {
+	// At the end, you tell it to listen to specific port. 
+	app.listen(PORT, function() {
+		console.log('Server listering on port ' + PORT + ' ...');
+	});
 });
