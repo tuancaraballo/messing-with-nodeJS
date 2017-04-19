@@ -105,20 +105,25 @@ function getTask(id) {
 	3- You can pass as many parameters as you want in the urls.
 	4- Send an error status if you can't find a result
 		response.status(404).send('Not found');
+	5- !! -> used for objects or stuff that are not bolean, you look at the 
+		truthy version or falsy version of them
  **/
 
 app.get('/todos/:id', function(request, response) {
 	var todoId = parseInt(request.params.id, 10);
-	var myTask = _.findWhere(todos, {
-		id: todoId
+	
+	db.todo.findById(todoId).then( function (todo) {
+		if(!!todo){
+			response.status(200).json(todo.toJSON());
+		}else{
+			response.status(404).send();
+		}
+		
+	}, function (error) {  //--> remember this is the same as using a catch
+		response.status(500).send();
+		//-->status 500 means it's an issue with the server, not with the client
+		// request 
 	});
-	//var myTask = getTask(id);  --> no longer needed.
-	if (myTask) {
-		response.status(202).json(myTask);
-	} else {
-		console.log('It did not find the task');
-		response.status(404).send();
-	}
 });
 
 /**
@@ -239,7 +244,8 @@ app.put('/todos/:id', function(request, response) {
 
 });
 //-> sync the database first, and then start the server. 
-db.sequelize.sync({force: true}).then(function() {
+// {force: true}  -> use it inside sync to drop tables at the start of the program
+db.sequelize.sync().then(function() {
 	// At the end, you tell it to listen to specific port. 
 	app.listen(PORT, function() {
 		console.log('Server listering on port ' + PORT + ' ...');
