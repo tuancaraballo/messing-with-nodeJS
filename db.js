@@ -1,13 +1,30 @@
 //-> requiring the sequelize model
 var Sequelize = require('sequelize');
 
-//-> instantiating the sequelize model wit the right configuration.
-//   of the type and where you are storing it. 
-var sequelize = new Sequelize(undefined, undefined, undefined, {
-	'dialect': "sqlite",
-	'storage': __dirname + '/data/dev-todo-api.sqlite'
-});
+/*  LESSON TIME: Environment Variables:
+In node you have environment variables, these variables depend on where node is run and various
+convigutations.
+One of these environment variables is env.This is set in production in heroku
+In heroku:
 
+   if env_ = production -> use postgres, if not then use sqlite
+
+  Also when you ran the add on command on heroku, you got access to another variable
+  which is database_url  and stores our connection information
+*/
+
+var env = process.env.NODE_ENV || 'development';
+var sequelize;
+if(env === 'production'){ // --> this is only true when it's in heroku
+	sequelize = new Sequelize(process.env.DATABASE_URL, {
+		'dialect': "postgres",
+	});
+}else{
+	sequelize = new Sequelize(undefined, undefined, undefined, { //-> development ode
+	'dialect': "sqlite",
+	'storage': __dirname + '/data/dev-todo-api.sqlite' //-> store data locally
+});
+}
 
 var db = {};
 

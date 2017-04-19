@@ -21,3 +21,28 @@ server.js calls db
 4- Notice that if you try to add elements with the same id to the database
 you will get an error back, to drop all tables at the beginnning for  testing
 purposes, then just  add the {force: true} inside sync
+
+
+5- To use postgres for heroku,
+
+  then in the terminal:
+  	heroku addons:create heroku-postgresql:hobby-dev	
+
+
+5.1 To use postgres in you app:
+	npm install pg --save
+	npm install pg-hstore --save
+
+	Then in your basic sqlite file.js 
+		substitue in db.js 
+		'dialect': "postgres",
+
+
+Enviroment variables:
+In node you have environment variables, these variables depend on where node is run and various
+convigutations.
+One of these environment variables is env.This is set in production in heroku
+In heroku:
+
+   if env_ = production -> use postgres, if not then use sqlite
+
