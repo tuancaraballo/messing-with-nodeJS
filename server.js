@@ -39,29 +39,37 @@ app.get('/', function(request, response) {
 
 app.get('/todos', function(request, response) {
 	var queryParams = request.query;
+	var whereObject = {};
+
+
 	var filtedTodos = todos;
 
 	// LESSON TIME: notice how the query parameter here instead of a boolean
 	//              it's a string
 	if (queryParams.hasOwnProperty('completed') && queryParams['completed'] === 'true') {
-		filtedTodos = _.where(filtedTodos, {
-			completed: true
-		});
+		whereObject.completed = true;
 	} else if (queryParams.hasOwnProperty('completed') && queryParams['completed'] === 'false') {
-		filtedTodos = _.where(filtedTodos, {
-			completed: false
-		});
+		whereObject.completed = false;
 	}
 
 	// LESSON TIME: Check if the queue property exists in the queryParam
-
 	if (queryParams.hasOwnProperty('q') && queryParams.q.length > 0) {
-		filtedTodos = _.filter(filtedTodos, function(todo) {
-			return todo.description.toLowerCase().indexOf(queryParams.q.toLowerCase()) > -1;
-		});
+		whereObject.description = {
+				$like: '%'+queryParams.q.toLowerCase() + '%'
+		};
 	}
 
-	response.json(filtedTodos);
+	db.todo.findAll( {
+		where:whereObject
+	}).then(function (todos) {
+		if(!!todos){
+			response.status(200).json(todos);	
+		}else{
+			response.status(404).send();
+		}					
+	}, function (error){ 
+		response.status(500).send();
+	});
 });
 
 
@@ -86,17 +94,6 @@ app.get('/todos', function(request, response) {
 
 
 **/
-function getTask(id) {
-	var len = todos.length
-	for (var i = 0; i < len; i++) {
-		if (todos[i].id === id) {
-			console.log("Found the task: " + todos[i].description);
-			return todos[i];
-		}
-	}
-	console.log('Did\'t find the task');
-	return null;
-}
 
 /** LESSON TIME:   Accessing argumens from url and sending error statuses 
 	1- Express uses the colon : to parse the data, so that you can use it 
@@ -106,7 +103,7 @@ function getTask(id) {
 	4- Send an error status if you can't find a result
 		response.status(404).send('Not found');
 	5- !! -> used for objects or stuff that are not bolean, you look at the 
-		truthy version or falsy version of them
+		truthy version of them.  !! -> same as true
  **/
 
 app.get('/todos/:id', function(request, response) {
