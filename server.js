@@ -185,20 +185,21 @@ app.post('/todos', function(request, response) {
 app.delete('/todos/:id', function(request, response) {
 
 	var todoId = parseInt(request.params.id, 10);
-	console.log('ID: ' + todoId);
-	var myTask = _.findWhere(todos, {
-		id: todoId
+	var whereObject= {};
+	whereObject.id = todoId;
+	
+	db.todo.destroy({
+		where:whereObject
+	}).then( function (rowsDeleted){
+		if(rowsDeleted === 0){
+			response.status(200).send("Error");
+		}else{
+			response.status(204).send("Success"); //--> status 204, everything went well, nothing to send back
+		}
+		
+	}, function() {
+		response.status(500).send('Not found');
 	});
-
-	if (!myTask) {
-		response.status(404).json({
-			"error": "no todo found with that id"
-		});
-	} else {
-		todos = _.without(todos, myTask);
-		response.json(todos);
-	}
-
 });
 
 
