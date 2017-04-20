@@ -200,19 +200,27 @@ app.put('/todos/:id', function (request, response) {
 	// -> filter the request to give you only these two fields
 	var body = _.pick(request.body, 'description', 'completed');
 	// -> get the id from the url 
+
 	var todoId = parseInt(request.params.id, 10);
 
 	var attribrutes = {};
 
   // NOTE: Although Sequelize will sanitize the input and Andrew said this is not necessary, I strongly believe
   //       we should keep this sanitazion, it's never harmful to have exra checks. this will avoid SQL injections
-	if (body.hasOwnProperty('completed') && _.isBoolean(body.completed)){
-		attribrutes.completed = body.completed;
+	if (body.hasOwnProperty('completed')){
+		if(_.isBoolean(body.completed)){
+			attribrutes.completed = body.completed;
+		}else{
+			return response.status(400).send("Wrong type for completed");
+		}
+	}  
+	if (body.hasOwnProperty('description')){
+		if(_.isString(body.description) && body.description.trim().length > 0){
+			attribrutes.description = body.description;
+		}else{
+			return response.status(400).send("Wrong type or length for description");
+		}
 	} 
-	if (body.hasOwnProperty('description') && _.isString(body.description) && body.description.trim().length > 0){
-		attribrutes.description = body.description
-	}
-
    // LESSON TIME: an instance method it's a method done on an already feteched object
    db.todo.findById(todoId).then( function (todo) {
    		if(todo){
