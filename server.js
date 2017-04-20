@@ -153,31 +153,22 @@ app.post('/todos', function(request, response) {
 	//    that we need from the request. 
 	var body = _.pick(request.body, 'description', 'completed');
 
-	console.log(body);
-
-	// --> if the task completed is a boolean, it doesn't check for true or false though, and a description was added
-	// --> you also want to check for the length in case somebody entered just a bunch of white spaces
-
+	// LESSON: Although sequelize will do its own validation, it's safe to add another exra layer of validation
+	//  although Andrew said not to do it, but I just came acrossanissue here
 	if (!_.isBoolean(body.completed) || !_.isString(body.description) || body.description.trim().length === 0) {
 		console.log('Did not work!');
-		return response.status(400).send();
+		return response.status(400).send("Wrong argument types");
 	}
 
 	body.description = body.description.trim();
-
 	body.id = todoNextId;
 
-
 	db.todo.create(body).then( function (todo) {
-		return response.status(200).json(todo.toJSON());
+		response.status(200).json(todo.toJSON());
 	}).catch(function (error){
 		return response.status(400).json(error);
 	});
-
-
-	// todos.push(body);
 	todoNextId++;
-	// response.json(body);
 });
 
 
@@ -205,40 +196,37 @@ app.delete('/todos/:id', function(request, response) {
 
 // PUT to update the array
 
-app.put('/todos/:id', function(request, response) {
+app.put('/todos/:id', function (request, response) {
 	// -> filter the request to give you only these two fields
 	var body = _.pick(request.body, 'description', 'completed');
 	// -> get the id from the url 
 	var todoId = parseInt(request.params.id, 10);
-	// -> find this task object based on this id:
-	var myTask = _.findWhere(todos, {
-		id: todoId
-	});
 
-	if (!myTask) {
-		return response.status(404).send("Task not found");
+	var attribrutes = {};
+
+  // NOTE: Although Sequelize will sanitize the input and Andrew said this is not necessary, I strongly believe
+  //       we should keep this sanitazion, it's never harmful to have exra checks. this will avoid SQL injections
+	if (body.hasOwnProperty('completed') && _.isBoolean(body.completed)){
+		attribrutes.completed = body.completed;
+	} 
+	if (body.hasOwnProperty('description') && _.isString(body.description) && body.description.trim().length > 0){
+		attribrutes.description = body.description
 	}
 
-	var validAttribrutes = {};
-
-	if (body.hasOwnProperty('completed') && _.isBoolean(body.completed)) {
-		validAttribrutes.completed = body.completed;
-	} else if (body.hasOwnProperty('completed')) { // --> property is not a boolean
-		return response.status(400).send();
-	}
-
-
-
-	if (body.hasOwnProperty('description') && _.isString(body.description) && body.description.trim().length > 0) {
-		validAttribrutes.description = body.description
-	} else if (body.hasOwnProperty('description')) { //-> has the property, but wrong type
-		return response.status(400).send();
-	}
-
-	// --> update the task now using the extend property
-	_.extend(myTask, validAttribrutes);
-
-	response.json(myTask);
+   // LESSON TIME: an instance method it's a method done on an already feteched object
+   db.todo.findById(todoId).then( function (todo) {
+   		if(todo){
+   			return todo.update(attribrutes).then( function (todo) {    
+   						response.json(todo.toJSON());  	
+   			}, function (error) {
+   				response.status(400).json(error);
+   			});
+   		}else{
+   			response.status(404).send();
+   		}
+   }, function () {
+   		response.status(500).send();
+   });
 
 });
 //-> sync the database first, and then start the server. 
