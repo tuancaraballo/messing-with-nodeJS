@@ -23,6 +23,7 @@ var PORT = process.env.PORT || 3000;
 var todos = [];
 var todoNextId = 1;
 
+
 //--> This is a middleware, remember that when you use
 // app.use all methods will call this first.
 
@@ -235,6 +236,26 @@ app.put('/todos/:id', function (request, response) {
    }, function () {
    		response.status(500).send();
    });
+
+});
+
+
+app.post('/users', function (request, response) {
+	body = _.pick(request.body, 'email', 'password');
+
+	if(!body.hasOwnProperty('email') || !_.isString(body.email) || body.email.trim().length < 6){
+		return response.status(400).send("Wrong email entry");
+	}
+
+	if(!body.hasOwnProperty('password') || !_.isString(body.password) || body.password.trim().length < 7){
+		return response.status(400).send("Password does not meet requirements");
+	}
+
+	db.user.create(body).then( function (user) {
+		response.status(200).json(user.toJSON());
+	}, function (error) {
+		response.status(500).json(error);
+	});
 
 });
 //-> sync the database first, and then start the server. 
