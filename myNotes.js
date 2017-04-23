@@ -57,4 +57,17 @@ In heroku:
 	- Allow you to run code before and after something has happened 
 	- You set a hook in the model (user.js or todo.js) document, and it runs before the validation
 	- This way, hooks allow you to lowercase any input before you query the database
-	- 
+
+8- Encrypting Password using hashing
+
+ - npm install bcryptjs --save  (the original was brcrypt, but it gives tons of error with mac) 
+ - Add the code for salting and hashing the password, remember the password is not 
+   stored in the database, bc it is virtual.
+ - Remember to not send back to the user the salt, password and password_hash, do so
+   by adding the instanceMethod after the hooks portion of the Model, and on the server.js
+   fle, instead of calling toJSON, call toPublicJSON that you defined in the model hooks
+
+ 
+
+
+
