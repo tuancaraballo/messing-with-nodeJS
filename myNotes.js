@@ -46,3 +46,15 @@ In heroku:
 
    if env_ = production -> use postgres, if not then use sqlite
 
+
+6 - Password validation:
+	- Add a layer in the js method (suggested by you)
+	- In sequelize also have a validation method 
+	- Consider lower casing everything, that Tuan and tuan are the same username 
+	- Use hooks
+	
+7- Hooks:
+	- Allow you to run code before and after something has happened 
+	- You set a hook in the model (user.js or todo.js) document, and it runs before the validation
+	- This way, hooks allow you to lowercase any input before you query the database
+	- 

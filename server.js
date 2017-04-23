@@ -240,16 +240,23 @@ app.put('/todos/:id', function (request, response) {
 });
 
 
+/*	LESSON TIME: INPUT SANITAZION:
+
+	Instead of doing the sanitazion here, as you had initially thought,
+	you should do it as hooks in the model. 
+
+*/
+
 app.post('/users', function (request, response) {
 	body = _.pick(request.body, 'email', 'password');
 
-	if(!body.hasOwnProperty('email') || !_.isString(body.email) || body.email.trim().length < 6){
-		return response.status(400).send("Wrong email entry");
-	}
+	// if(!body.hasOwnProperty('email') || !_.isString(body.email) || body.email.trim().length < 6){
+	// 	return response.status(400).send("Wrong email entry");
+	// }
 
-	if(!body.hasOwnProperty('password') || !_.isString(body.password) || body.password.trim().length < 7){
-		return response.status(400).send("Password does not meet requirements");
-	}
+	// if(!body.hasOwnProperty('password') || !_.isString(body.password) || body.password.trim().length < 7){
+	// 	return response.status(400).send("Password does not meet requirements");
+	// }
 
 	db.user.create(body).then( function (user) {
 		response.status(200).json(user.toJSON());
