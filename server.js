@@ -1,5 +1,6 @@
 var express = require('express');
 var bodyParser = require('body-parser');
+var bcryptjs = require('bcryptjs');
 
 /*
 	LESSON TIME: underscore
@@ -265,9 +266,20 @@ app.post('/users', function (request, response) {
 	});
 
 });
+
+
+app.post('/users/login', function (request, response) {
+	body = _.pick(request.body, 'email', 'password');
+	db.user.authenticate(body).then(function (user) {
+		response.json(user.toPublicJSON());
+	}, function (error){
+		response.status(401).json(error);
+	});
+});
+
 //-> sync the database first, and then start the server. 
 // {force: true}  -> use it inside sync to drop tables at the start of the program
-db.sequelize.sync().then(function() {
+db.sequelize.sync({force: true}).then(function() {
 	// At the end, you tell it to listen to specific port. 
 	app.listen(PORT, function() {
 		console.log('Server listering on port ' + PORT + ' ...');
