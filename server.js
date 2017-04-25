@@ -269,11 +269,17 @@ app.post('/users', function (request, response) {
 
 
 app.post('/users/login', function (request, response) {
-	body = _.pick(request.body, 'email', 'password');
+	var body = _.pick(request.body, 'email', 'password');
+
 	db.user.authenticate(body).then(function (user) {
-		response.json(user.toPublicJSON());
-	}, function (error){
-		response.status(401).json(error);
+		var token = user.generateToken('authentication');
+		if (token) {
+			response.header('Auth', token).json(user.toJSON());	
+		} else {
+			response.status(401).send();
+		}
+	}, function () {
+		response.status(401).send();
 	});
 });
 

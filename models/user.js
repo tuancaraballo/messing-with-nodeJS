@@ -1,5 +1,7 @@
 var bcryptjs = require('bcryptjs');
 var _ = require('underscore');
+var cryptojs = require('crypto-js');
+var jwt = require('jsonwebtoken');
 
 module.exports = function(sequelize, DataTypes) {
 	var user = sequelize.define('user', { //-> NOTICE here how we save it and return
@@ -50,27 +52,64 @@ module.exports = function(sequelize, DataTypes) {
 			authenticate: function(body) {
 				return new Promise(function (resolve, reject) {
 					if (typeof body.email !== 'string' || typeof body.password !== 'string') {
+						console.log('wrong user password!')
 						return reject("Wrong username and password");
 					}
 					user.findOne({ //--> NOTICE, here you don't user db, but just user
 						where: {
-							email: body.email,
-						}
+							email: body.email
+													}
 					}).then(function(theUser) { //--> LESSON: see how you use compareSync and pasword_hash
 						if (!theUser || !bcryptjs.compareSync(body.password, theUser.get('password_hash'))) {
+							console.log('wrong user password!!')
 							return reject("Wrong username and password");
 						}
 						return resolve(theUser);
 					}, function(error) {
+						console.log('wrong user password!!!')
 						return reject("Wrong username and password");
 					});
 				});
 			}
 		},
+/* LESSON TIME: difference between classMethods vs instanceMethods:
+	instanceMethods are used when you work with an already instantiated object,
+	classMethods however, are for the class, you don't need an instantiated object
+	to use them. Think about classMethods as being methods to apply to the blueprint
+	of a house, and instanceMethods methods to apply to the house that you built
+	using that bluprint, some instance methods could be, paintHouse(blue), while
+	a classMethod coud be getHouseColor()
+
+	In this code, You can only call toPublicJSON on an already instantiated object while
+	authenticate is not a method called on an object, but it's called by itself.
+*/
+
 		instanceMethods: {
 			toPublicJSON: function() {
 				var json = this.toJSON();
 				return _.pick(json, 'id', 'email', 'createdAt', 'updatedAt');
+			},
+			generateToken: function (type) {
+				if (!_.isString(type)) {
+					return undefined;
+				}
+
+				try {
+					//-> you take the data of the json, and convert it into a string
+					var stringData = JSON.stringify({id: this.get('id'), type: type});
+					//->because crypto only knows how to encrypt strings
+					//-> it takes the data you want to encrypt and a key
+					var encryptedData = cryptojs.AES.encrypt(stringData, 'abc123!@#!').toString();
+					//-> using webToken
+					var token = jwt.sign({
+						token: encryptedData
+					}, 'qwerty098');
+
+					return token;
+				} catch (e) {
+					console.error(e);
+					return undefined;
+				}
 			}
 		}
 	});

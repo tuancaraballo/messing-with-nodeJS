@@ -67,7 +67,10 @@ In heroku:
    by adding the instanceMethod after the hooks portion of the Model, and on the server.js
    fle, instead of calling toJSON, call toPublicJSON that you defined in the model hooks
 
- 
+ 8- Using a webtoken:
+    npm install jsonwebtoken  --save
+    npm install crypto-js --save
+
 
 
 
