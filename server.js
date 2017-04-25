@@ -1,6 +1,9 @@
 var express = require('express');
 var bodyParser = require('body-parser');
 var bcryptjs = require('bcryptjs');
+var _ = require('underscore');
+var db = require('./db.js'); //-> importing the database
+var middleware = require('./middleware.js')(db); //--> NOTICE HOW YOU PASS THE DB ARGUMENT
 
 /*
 	LESSON TIME: underscore
@@ -15,8 +18,7 @@ var bcryptjs = require('bcryptjs');
 
 */
 
-var _ = require('underscore');
-var db = require('./db.js'); //-> importing the database
+
 
 var app = express();
 var PORT = process.env.PORT || 3000;
@@ -39,7 +41,7 @@ app.get('/', function(request, response) {
 	response.send('Root API');
 });
 
-app.get('/todos', function(request, response) {
+app.get('/todos', middleware.requireAuthentication,  function(request, response) {
 	var queryParams = request.query;
 	var whereObject = {};
 
@@ -108,7 +110,7 @@ app.get('/todos', function(request, response) {
 		truthy version of them.  !! -> same as true
  **/
 
-app.get('/todos/:id', function(request, response) {
+app.get('/todos/:id',middleware.requireAuthentication, function(request, response) {
 	var todoId = parseInt(request.params.id, 10);
 	
 	db.todo.findById(todoId).then( function (todo) {
@@ -148,7 +150,7 @@ app.get('/todos/:id', function(request, response) {
         menu right next to binary, which might show 'text' by default, pick 
         JSON(application/json). Notice how Headers(1) shows 1 now
 **/
-app.post('/todos', function(request, response) {
+app.post('/todos',middleware.requireAuthentication, function(request, response) {
 	//var body = request.body;
 
 	// --> this method from underscore, allows to filted the information
@@ -175,7 +177,7 @@ app.post('/todos', function(request, response) {
 
 
 // DELETE from Array
-app.delete('/todos/:id', function(request, response) {
+app.delete('/todos/:id',middleware.requireAuthentication, function(request, response) {
 
 	var todoId = parseInt(request.params.id, 10);
 	var whereObject= {};
@@ -198,7 +200,7 @@ app.delete('/todos/:id', function(request, response) {
 
 // PUT to update the array
 
-app.put('/todos/:id', function (request, response) {
+app.put('/todos/:id',middleware.requireAuthentication, function (request, response) {
 	// -> filter the request to give you only these two fields
 	var body = _.pick(request.body, 'description', 'completed');
 	// -> get the id from the url 

@@ -70,6 +70,27 @@ module.exports = function(sequelize, DataTypes) {
 						return reject("Wrong username and password");
 					});
 				});
+			},
+			findByToken: function (token) {
+				return new Promise( function (resolve, reject) {
+					try {
+						var decodedJWT = jwt.verify(token,'qwerty098');//-> it verifies that the passwords matches the token
+						var bytes = cryptojs.AES.decrypt(decodedJWT.token,'abc123!@#!');
+						var tokenData = JSON.parse(bytes.toString(cryptojs.enc.Utf8));
+						//from user youd defined above
+						user.findById(tokenData.id).then( function (theUser) {
+							if(theUser){
+								resolve(theUser);
+							}else {
+								reject();
+							}
+						}, function (error) {
+							reject()
+						});
+					}catch (e) {
+						reject();
+					}
+				});
 			}
 		},
 /* LESSON TIME: difference between classMethods vs instanceMethods:
