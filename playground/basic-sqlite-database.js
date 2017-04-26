@@ -21,10 +21,10 @@ var sequelize = new Sequelize(undefined, undefined, undefined, {
 var Todo = sequelize.define('todo', {
 	description: {
 		type: Sequelize.STRING,
-		allowNull: false,  // --> this allow  this field to be optional
-		validate: { 
+		allowNull: false, // --> this allow  this field to be optional
+		validate: {
 			// noEmpty : true// --> this prevent users from entering empty strings
-			len: [1,250]
+			len: [1, 250]
 		}
 	},
 	completed: {
@@ -34,83 +34,54 @@ var Todo = sequelize.define('todo', {
 	}
 });
 
-//Lesson: creating stuff in the database and creating the database
-//        force:true forces to drop all the existing tables and recreate them
-//        when you restart the databse.
-//        force is false by default. Meaning that it will only created a table
-//        if it doesn't exist.
-
-sequelize.sync(
-		//{force: true}
-	).then(function () {
-	console.log('Everything is synced');
-
-	//var todos = 
-
-/*LESSON: everyime you add a findAll, you process it in a .then call, since all
-		  all these function calls are promises
-*/
-
-
-	Todo.findById(2).then( function (todo) {
-		if(todo){
-			console.log(todo.toJSON());
-		}else
-			console.log('todo not found');
-	});
-
-	Todo.findAll( {
-		where : {
-			description: {
-				$like: '%Grind%'
-			}
-		}
-	}).then(function (todos) {
-		todos.forEach(function (todo) {
-			if(todo){
-				console.log(todo.toJSON());
-			}else{
-				console.log('todo not found');
-			}
-			
-		 });				
-	});
-
+var User = sequelize.define('user', {
+	email: Sequelize.STRING
+	// email: {
+	// 	type: Sequelize.STRING;
+	// }
+	// they are both the sames
 	
-/*
-	Todo.create( {
-		description: 'Grind hard',
-		completed: false
-	}).then( function (todo) {
-		console.log('Finished!');
-		console.log(todo);
-		return Todo.create ( {
-			description: 'Clean office'
-		});
-	}).then( function () {
-		//return Todo.findById(1);
-		return Todo.findAll( {
-			where: {
-				completed:false,  //--> where completed is false
-				description: { // --> and description contains the word hard
-					// --> $like allows you to find a word
-					$like: '%hard%'  //--> % sign to both sides means that it
-				}                   // can be in the middle
-			}
-		});
-	}).then( function (todos) {
-		if(todos){
-			todos.forEach( function (todo) {
-				console.log(todo.toJSON());
-			});
-			
-		}else{
-			console.log('no todo found');
-		}
-	}).catch (function (error) {
-		console.log(error);
-	});
-	*/
 });
 
 
+/*
+	LESSON TIME: this code allows the one to many relationship where a user can have
+				 many todo items. This code sets up a foreign key
+*/
+Todo.belongsTo(User);
+User.hasMany(Todo);
+
+/*
+Lesson: creating stuff in the database and creating the database
+        force:true forces to drop all the existing tables and recreate them
+        when you restart the databse.
+        force is false by default. Meaning that it will only created a table
+       if it doesn't exist.
+*/
+sequelize.sync(
+	// {force: true}
+).then(function() {
+	console.log('Everything is synced');
+
+	User.findById(1).then( function (user) {
+		user.getTodos({
+			where: {completed:false}
+		}).then( function (todos) { /// --> LESSON: getTodos, is the method get + className
+			todos.forEach( function (todo) {     // and it will let you access to all that stuff
+				console.log(todo.toJSON());
+			});
+		});
+	});
+
+	// User.create({
+	// 	email: "tuan2606@stanford.edu"
+	// }).then(function () {
+	// 	return Todo.create({
+	// 		description: "grind hard!"
+	// 	});
+	// }).then( function (todo) {
+	// 	User.findById(1).then(function (user) {
+	// 		user.addTodo(todo);  //-> builtin command once you have established the relationship
+	// 	});
+	// });
+});

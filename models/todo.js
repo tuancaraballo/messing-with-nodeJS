@@ -1,3 +1,5 @@
+var _ = require('underscore');
+
 module.exports = function(sequelize, DataTypes) {
 	return sequelize.define('todo', {
 		description: {
@@ -17,10 +19,12 @@ module.exports = function(sequelize, DataTypes) {
 	{
   		validate: {
     		validateTypes: function() {
-      			if ((typeof(this.completed) !== "boolean")){
+      			if (!_.isBoolean(this.completed)){
       				throw new Error('Incorrect type for completed');
       			} 
-      			if (typeof(this.description) !== "string"){
+      			console.log('This is the typeof description:');
+      			console.log(typeof this.description);
+      			if (_.isString(this.description) == false){
         			throw new Error('Incorrect type for description');
       			}
     		}	

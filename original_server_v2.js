@@ -151,7 +151,10 @@ app.get('/todos/:id',middleware.requireAuthentication, function(request, respons
         JSON(application/json). Notice how Headers(1) shows 1 now
 **/
 app.post('/todos',middleware.requireAuthentication, function(request, response) {
+	//var body = request.body;
 
+	// --> this method from underscore, allows to filted the information
+	//    that we need from the request. 
 	var body = _.pick(request.body, 'description', 'completed');
 
 	// LESSON: Although sequelize will do its own validation, it's safe to add another exra layer of validation
@@ -161,19 +164,16 @@ app.post('/todos',middleware.requireAuthentication, function(request, response) 
 		return response.status(400).send("Wrong argument types");
 	}
 
+
 	body.description = body.description.trim();
-	
+	body.id = todoNextId;
+
 	db.todo.create(body).then( function (todo) {
-		request.user.addTodo(todo).then( function () {
-			return todo.reload();
-		}).then( function (todo) {
-			response.status(200).json(todo.toJSON());
-		});   //--> Notice how it gets the user from request, but you need to call reload to
-			// update it in the database, since this user is not a pointer to the one in the  db
-		
+		response.status(200).json(todo.toJSON());
 	}).catch(function (error){
 		return response.status(400).json(error);
 	});
+	todoNextId++;
 });
 
 
@@ -288,9 +288,7 @@ app.post('/users/login', function (request, response) {
 
 //-> sync the database first, and then start the server. 
 // {force: true}  -> use it inside sync to drop tables at the start of the program
-db.sequelize.sync(
-	// {force: true}
-	).then(function() {
+db.sequelize.sync({force: true}).then(function() {
 	// At the end, you tell it to listen to specific port. 
 	app.listen(PORT, function() {
 		console.log('Server listering on port ' + PORT + ' ...');
