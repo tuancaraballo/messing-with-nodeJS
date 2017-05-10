@@ -71,6 +71,13 @@ In heroku:
     npm install jsonwebtoken  --save
     npm install crypto-js --save
 
+ 9- Relating two tables:
+ 	use: 
+ 		db.todo.belongsTo(db.user);
+ 		db.user.hasMany(db.todo);
+
+ 	see in post todos how you use the method reload
+
 
 
 

@@ -15,20 +15,5 @@ module.exports = function(sequelize, DataTypes) {
 			allowNull: false,
 			defaultValue: false // --> sets default value in case the user doesn't enter it
 		}
-	}, 
-	{
-  		validate: {
-    		validateTypes: function() {
-      			if (!_.isBoolean(this.completed)){
-      				throw new Error('Incorrect type for completed');
-      			} 
-      			console.log('This is the typeof description:');
-      			console.log(typeof this.description);
-      			if (_.isString(this.description) == false){
-        			throw new Error('Incorrect type for description');
-      			}
-    		}	
-  		}
-  	}	
-	);
+	});
 };

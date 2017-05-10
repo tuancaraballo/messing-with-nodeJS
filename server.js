@@ -168,11 +168,17 @@ app.post('/todos',middleware.requireAuthentication, function(request, response) 
 			return todo.reload();
 		}).then( function (todo) {
 			response.status(200).json(todo.toJSON());
+		}, function (error){
+			console.log('WHOPS, there was and error in the db');
+			console.log(error);
+			return response.status(400).send();
 		});   //--> Notice how it gets the user from request, but you need to call reload to
 			// update it in the database, since this user is not a pointer to the one in the  db
 		
 	}).catch(function (error){
-		return response.status(400).json(error);
+		console.log('WHOPS, catching an error from db');
+		console.log(error);
+		return response.status(400).send();
 	});
 });
 
