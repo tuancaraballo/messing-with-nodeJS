@@ -58,7 +58,7 @@ module.exports = function(sequelize, DataTypes) {
 					user.findOne({ //--> NOTICE, here you don't user db, but just user
 						where: {
 							email: body.email
-													}
+						}
 					}).then(function(theUser) { //--> LESSON: see how you use compareSync and pasword_hash
 						if (!theUser || !bcryptjs.compareSync(body.password, theUser.get('password_hash'))) {
 							console.log('wrong user password!!')

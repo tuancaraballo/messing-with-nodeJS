@@ -41,9 +41,17 @@ app.get('/', function(request, response) {
 	response.send('Root API');
 });
 
+
+// Purpose: Given a query, this functions queries a database and return a list of objects containing
+//          those elements in the query
+
+//     GET /todos?completed=false&q=work
 app.get('/todos', middleware.requireAuthentication,  function(request, response) {
+	console.log('Got here !!')
 	var queryParams = request.query;
-	var whereObject = {};
+	var whereObject = {
+		userId: request.user.get('id')
+	};
 
 
 	var filtedTodos = todos;
@@ -113,7 +121,12 @@ app.get('/todos', middleware.requireAuthentication,  function(request, response)
 app.get('/todos/:id',middleware.requireAuthentication, function(request, response) {
 	var todoId = parseInt(request.params.id, 10);
 	
-	db.todo.findById(todoId).then( function (todo) {
+	db.todo.findOne({
+		where: {
+			id: todoId,
+			userId: request.user.get('id')
+		}
+	}).then( function (todo) {
 		if(!!todo){
 			response.status(200).json(todo.toJSON());
 		}else{
@@ -187,11 +200,12 @@ app.post('/todos',middleware.requireAuthentication, function(request, response) 
 app.delete('/todos/:id',middleware.requireAuthentication, function(request, response) {
 
 	var todoId = parseInt(request.params.id, 10);
-	var whereObject= {};
-	whereObject.id = todoId;
 	
 	db.todo.destroy({
-		where:whereObject
+		where: {
+			id: todoId,
+		userId: request.user.get('id') //-> this checks that you are accessing todos that are yours
+		}
 	}).then( function (rowsDeleted){
 		if(rowsDeleted === 0){
 			response.status(200).send("Error");
@@ -214,26 +228,15 @@ app.put('/todos/:id',middleware.requireAuthentication, function (request, respon
 
 	var todoId = parseInt(request.params.id, 10);
 
-	var attribrutes = {};
-
-  // NOTE: Although Sequelize will sanitize the input and Andrew said this is not necessary, I strongly believe
-  //       we should keep this sanitazion, it's never harmful to have exra checks. this will avoid SQL injections
-	if (body.hasOwnProperty('completed')){
-		if(_.isBoolean(body.completed)){
-			attribrutes.completed = body.completed;
-		}else{
-			return response.status(400).send("Wrong type for completed");
+ 
+   // LESSON TIME: an instance method it's a method done on an already fetched object
+   db.todo.findOne(
+   {
+   		where: {
+				id: todoId,
+			userId: request.user.get('id') //-> this checks that you are accessing todos that are yours
 		}
-	}  
-	if (body.hasOwnProperty('description')){
-		if(_.isString(body.description) && body.description.trim().length > 0){
-			attribrutes.description = body.description;
-		}else{
-			return response.status(400).send("Wrong type or length for description");
-		}
-	} 
-   // LESSON TIME: an instance method it's a method done on an already feteched object
-   db.todo.findById(todoId).then( function (todo) {
+   }).then( function (todo) {
    		if(todo){
    			return todo.update(attribrutes).then( function (todo) {    
    						response.json(todo.toJSON());  	
@@ -259,14 +262,6 @@ app.put('/todos/:id',middleware.requireAuthentication, function (request, respon
 
 app.post('/users', function (request, response) {
 	body = _.pick(request.body, 'email', 'password');
-
-	// if(!body.hasOwnProperty('email') || !_.isString(body.email) || body.email.trim().length < 6){
-	// 	return response.status(400).send("Wrong email entry");
-	// }
-
-	// if(!body.hasOwnProperty('password') || !_.isString(body.password) || body.password.trim().length < 7){
-	// 	return response.status(400).send("Password does not meet requirements");
-	// }
 
 	db.user.create(body).then( function (user) {
 		response.status(200).json(user.toPublicJSON());
