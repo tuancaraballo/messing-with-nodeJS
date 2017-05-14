@@ -290,7 +290,7 @@ app.post('/users/login', function (request, response) {
 //-> sync the database first, and then start the server. 
 // {force: true}  -> use it inside sync to drop tables at the start of the program
 db.sequelize.sync(
-	// {force: true}
+	{force: true}
 	).then(function() {
 	// At the end, you tell it to listen to specific port. 
 	app.listen(PORT, function() {
