@@ -275,15 +275,28 @@ app.post('/users', function (request, response) {
 app.post('/users/login', function (request, response) {
 	var body = _.pick(request.body, 'email', 'password');
 
+	var userInstance;
+
 	db.user.authenticate(body).then(function (user) {
 		var token = user.generateToken('authentication');
-		if (token) {
-			response.header('Auth', token).json(user.toPublicJSON());	
-		} else {
-			response.status(401).send();
-		}
-	}, function () {
+		userInstance = user;
+		return db.token.create({  //--> this returns doesn't exit the function, but rather
+			token:token 		// processed in the next then
+		});
+	}).then( function (tokenInstance) { // --> this function runs after token.create finish, 
+		response.header('Auth', tokenInstance.get('token')).json(userInstance.toPublicJSON());
+	}).catch(function () {
 		response.status(401).send();
+	})
+});
+
+// DELETE /user/login
+
+app.delete('/users/login', middleware.requireAuthentication, function (request, response) {
+	request.token.destroy().then( function() {
+		response.status(204).send();
+	}).catch(function () {
+		response.status(500).send();
 	});
 });
 
